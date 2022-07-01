@@ -10,7 +10,7 @@ import Network
 import os
 
 public class TelnetClient {
-    let connection : TelnetClientConnection
+    public let connection : TelnetClientConnection
     let host : NWEndpoint.Host
     let port : NWEndpoint.Port
     

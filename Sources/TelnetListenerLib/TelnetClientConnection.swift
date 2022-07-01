@@ -15,9 +15,14 @@ public class TelnetClientConnection {
     let  nwConnection: NWConnection
     let queue = DispatchQueue(label: "Client connection Q")
     
+    public var receivedDataCallback : (_ : String) -> ()  // argument is the received text
+ 
     public init(nwConnection: NWConnection) {
         self.nwConnection = nwConnection
+        receivedDataCallback = TelnetClientConnection.dummyCallback
     }
+    
+    static func dummyCallback(_ : String) {}  // to have something to initialize into receivedDataCallback by default
     
     var didStopCallback: ((Error?) -> Void)? = nil
     
@@ -50,9 +55,10 @@ public class TelnetClientConnection {
                 
                 let message = String(data: data, encoding: .utf8) ?? "<unknown>"
                                 
-                self.logger.debug("connection did receive, data: \(data as NSData) string: \(message)")
+                // self.logger.debug("connection did receive, data: \(data as NSData) string: \(message)")
                 DispatchQueue.main.async {   // from Naked Networking
-                        // TODO: This is where the line is sent
+                    // TODO: This is where the line is sent
+                    self.receivedDataCallback(message)
                 }
             }
             if isComplete {
@@ -71,7 +77,7 @@ public class TelnetClientConnection {
                 self.connectionDidFail(error: error)
                 return
             }
-            self.logger.debug("connection did send, data: \(data as NSData)")
+            // self.logger.debug("connection did send, data: \(data as NSData)")
         }))
     }
     
