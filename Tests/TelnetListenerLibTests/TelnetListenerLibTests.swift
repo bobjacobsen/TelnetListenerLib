@@ -6,6 +6,6 @@ final class TelnetListenerLibTests: XCTestCase {
         // This is an example of a functional test case.
         // Use XCTAssert and related functions to verify your tests produce the correct
         // results.
-        XCTAssertEqual(TelnetListenerLib().text, "Hello, World!")
+        //XCTAssertEqual(TelnetListenerLib().text, "Hello, World!")
     }
 }
