@@ -15,7 +15,7 @@ public class TelnetClientConnection {
     let  nwConnection: NWConnection
     let queue = DispatchQueue(label: "Client connection Q")
     
-    init(nwConnection: NWConnection) {
+    public init(nwConnection: NWConnection) {
         self.nwConnection = nwConnection
     }
     
