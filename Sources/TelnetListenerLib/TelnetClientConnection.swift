@@ -57,7 +57,7 @@ public class TelnetClientConnection {
                                 
                 // self.logger.debug("connection did receive, data: \(data as NSData) string: \(message)")
                 DispatchQueue.main.async {   // from Naked Networking
-                    // TODO: This is where the line is sent
+                    // This is where the line is sent into the attached code
                     self.receivedDataCallback(message)
                 }
             }
