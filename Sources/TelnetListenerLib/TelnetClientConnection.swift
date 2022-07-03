@@ -71,7 +71,6 @@ public class TelnetClientConnection {
                 self.logger.info("setupReceive error \(error, privacy: .public)")
                 self.connectionDidFail(error: error)
             } else {
-                self.logger.info("setupReceive default, repeats")
                 self.setupReceive()
             }
         }
