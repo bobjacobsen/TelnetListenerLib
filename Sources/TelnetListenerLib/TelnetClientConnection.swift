@@ -36,12 +36,15 @@ public class TelnetClientConnection {
     private func stateDidChange(to state: NWConnection.State) {
         switch state {
         case .waiting(let error):
+            logger.info("Client connection waiting")
             connectionDidFail(error: error)
         case .ready:
             logger.info("Client connection ready")
         case .failed(let error):
+            logger.info("Client connection failed")
             connectionDidFail(error: error)
         default:
+            logger.info("Client connection transition with extra state")
             break
         }
     }
@@ -62,10 +65,13 @@ public class TelnetClientConnection {
                 }
             }
             if isComplete {
+                self.logger.info("setupReceive isComplete")
                 self.connectionDidEnd()
             } else if let error = error {
+                self.logger.info("setupReceive error \(error, privacy: .public)")
                 self.connectionDidFail(error: error)
             } else {
+                self.logger.info("setupReceive default, repeats")
                 self.setupReceive()
             }
         }
