@@ -45,9 +45,11 @@ public class TelnetClient {
     
     public func didStopCallback(error: Error?) {
         if error == nil {
-            exit(EXIT_SUCCESS)
+            // exit(EXIT_SUCCESS)
+            logger.info("Connection exited with SUCCESS")
         } else {
-            exit(EXIT_FAILURE)
+            // exit(EXIT_FAILURE)
+            logger.info("Connection exited with ERROR: \(error!, privacy: .public)")
         }
     }
 }
