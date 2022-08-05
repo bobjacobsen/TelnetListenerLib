@@ -9,6 +9,8 @@ import Foundation
 import Network
 import os
 
+// TODO: This disconnects when the application is put in the background
+
 public class TelnetClient {
     public let connection : TelnetClientConnection
     let host : NWEndpoint.Host
