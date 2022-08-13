@@ -10,6 +10,9 @@ import Network
 import os
 
 public class TelnetClientConnection {
+    
+    let logSandAndRecieve = false // controls whether to log sent and received data
+    
     let logger = Logger(subsystem: "org.ardenwood.TelnetListenerLib", category: "TelnetClientConnection")
 
     let  nwConnection: NWConnection
@@ -61,6 +64,9 @@ public class TelnetClientConnection {
                 // self.logger.debug("connection did receive, data: \(data as NSData) string: \(message)")
                 DispatchQueue.main.async {   // from Naked Networking
                     // This is where the line is sent into the attached code
+                    if (self.logSandAndRecieve) {
+                        self.logger.debug("connection did receive, data: \(message, privacy:.public)")
+                    }
                     self.receivedDataCallback(message)
                 }
             }
@@ -82,7 +88,9 @@ public class TelnetClientConnection {
                 self.connectionDidFail(error: error)
                 return
             }
-            // self.logger.debug("connection did send, data: \(data as NSData)")
+            if (self.logSandAndRecieve) {
+                self.logger.debug("connection did send, data: \(String(data: data, encoding: .utf8)!, privacy:.public)")
+            }
         }))
     }
     
