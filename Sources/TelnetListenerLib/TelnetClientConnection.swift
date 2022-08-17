@@ -13,7 +13,7 @@ public class TelnetClientConnection {
     
     let logSandAndRecieve = false // controls whether to log sent and received data
     
-    let logger = Logger(subsystem: "org.ardenwood.TelnetListenerLib", category: "TelnetClientConnection")
+    let logger = Logger(subsystem: "us.ardenwood.TelnetListenerLib", category: "TelnetClientConnection")
 
     let  nwConnection: NWConnection
     let queue = DispatchQueue(label: "Client connection Q")

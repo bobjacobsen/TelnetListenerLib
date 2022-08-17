@@ -16,7 +16,7 @@ public class TelnetClient {
     let host : NWEndpoint.Host
     let port : NWEndpoint.Port
     
-    let logger = Logger(subsystem: "org.ardenwood.TelnetListenerLib", category: "TelnetClient")
+    let logger = Logger(subsystem: "us.ardenwood.TelnetListenerLib", category: "TelnetClient")
     
     public init(host: String, port: UInt16) {
         self.host = NWEndpoint.Host(host)
