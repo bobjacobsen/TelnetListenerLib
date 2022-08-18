@@ -113,6 +113,7 @@ public class TelnetClientConnection {
         self.nwConnection.stateUpdateHandler = nil
         self.nwConnection.cancel()
         if let didStopCallback = self.didStopCallback {
+            logger.info("invoking didStopCallBack")
             self.didStopCallback = nil
             didStopCallback(error)
         }

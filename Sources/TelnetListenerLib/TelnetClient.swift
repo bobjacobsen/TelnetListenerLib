@@ -23,18 +23,22 @@ public class TelnetClient {
         self.port = NWEndpoint.Port(rawValue: port)!
         let nwConnection = NWConnection(host: self.host, port: self.port, using: .tcp)
         connection = TelnetClientConnection(nwConnection: nwConnection)
-        
+        connection.didStopCallback = didStopCallback(error:)
+
         logger.info("TelnetClientConnection created \(host) \(port)")
     }
     
+    public func setStopCallback(_ callback: @escaping ((any Error)?) -> Void ) {
+        connection.didStopCallback = callback
+    }
     public func start() {
-        logger.info("TelnetClient started")
-        connection.didStopCallback = didStopCallback(error:)
+        logger.info("TelnetClient start")
         connection.start()
     }
     
     public func stop() {
         connection.stop()
+        logger.error("Connection stopped")
     }
     
     public func sendString(string: String) {
@@ -48,7 +52,8 @@ public class TelnetClient {
     public func didStopCallback(error: Error?) {
         if error == nil {
             // exit(EXIT_SUCCESS)
-            logger.info("Connection exited with SUCCESS")
+            logger.info("Connection exited with SUCCESS, restarting")
+            start()
         } else {
             // exit(EXIT_FAILURE)
             logger.info("Connection exited with ERROR: \(error!, privacy: .public)")
