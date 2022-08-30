@@ -19,26 +19,29 @@ public class TelnetClient {
     let logger = Logger(subsystem: "us.ardenwood.TelnetListenerLib", category: "TelnetClient")
     
     public init(host: String, port: UInt16) {
+        logger.trace("TelnetClient init \(host) \(port)")
         self.host = NWEndpoint.Host(host)
         self.port = NWEndpoint.Port(rawValue: port)!
         let nwConnection = NWConnection(host: self.host, port: self.port, using: .tcp)
         connection = TelnetClientConnection(nwConnection: nwConnection)
         connection.didStopCallback = didStopCallback(error:)
 
-        logger.info("TelnetClientConnection created \(host) \(port)")
+        logger.info("TelnetClient init complete")
     }
     
     public func setStopCallback(_ callback: @escaping ((any Error)?) -> Void ) {
         connection.didStopCallback = callback
     }
     public func start() {
-        logger.info("TelnetClient start")
+        logger.trace("TelnetClient start")
         connection.start()
+        logger.trace("TelnetClient started")
     }
     
     public func stop() {
+        logger.trace("TelnetClient stop")
         connection.stop()
-        logger.error("Connection stopped")
+        logger.trace("TelnetClient stopped")
     }
     
     public func sendString(string: String) {
@@ -56,7 +59,7 @@ public class TelnetClient {
             start()
         } else {
             // exit(EXIT_FAILURE)
-            logger.info("Connection exited with ERROR: \(error!, privacy: .public)")
+            logger.error("Connection exited with ERROR: \(error!, privacy: .public)")
         }
     }
 }
