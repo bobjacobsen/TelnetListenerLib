@@ -37,12 +37,13 @@ public class TelnetClientConnection {
         logger.trace("TelnetClientConnection connection started")
     }
     
+    // TODO: elevate this to a OpenlcbLibrary callback to fill the status field.
     private func stateDidChange(to state: NWConnection.State) {
         logger.trace("TelnetClientConnection stateDidChange entered")
         switch state {
         case .waiting(let error):
-            logger.info("Client connection waiting")
-            connectionDidFail(error: error)
+            logger.info("Client connection waiting: \(error, privacy:.public)")
+            connectionDidFail(error: error) // TODO: is waiting a failure?
         case .ready:
             logger.info("Client connection ready")
         case .failed(let error):
