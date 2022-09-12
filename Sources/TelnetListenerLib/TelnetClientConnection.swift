@@ -11,24 +11,23 @@ import os
 
 public class TelnetClientConnection {
     
+    let  nwConnection: NWConnection
+    public var receivedDataCallback : (_ : String) -> ()  // argument is the received text
+
+    var didStopCallback: ((Error?) -> Void)? = nil
+
     let logSendAndReceive = false // controls whether to log sent and received data
-    
     let logger = Logger(subsystem: "us.ardenwood.TelnetListenerLib", category: "TelnetClientConnection")
 
-    let  nwConnection: NWConnection
     let queue = DispatchQueue(label: "Client connection Q")
     
-    public var receivedDataCallback : (_ : String) -> ()  // argument is the received text
- 
     public init(nwConnection: NWConnection) {
         self.nwConnection = nwConnection
         receivedDataCallback = TelnetClientConnection.dummyCallback
     }
     
     static func dummyCallback(_ : String) {}  // to have something to initialize into receivedDataCallback by default
-    
-    var didStopCallback: ((Error?) -> Void)? = nil
-    
+        
     func start() {
         logger.trace("TelnetClientConnection connection will start")
         nwConnection.stateUpdateHandler = stateDidChange(to:)
@@ -61,11 +60,10 @@ public class TelnetClientConnection {
             if let data, !data.isEmpty {
                 
                 // THIS IS WHERE DATA IS RECEIVED
-                // might be part of a line, full line, or multiple lines
+                // Might be part of a line, full line, or multiple lines
                 
                 let message = String(data: data, encoding: .utf8) ?? "<unknown>"
                                 
-                // self.logger.debug("connection did receive, data: \(data as NSData) string: \(message)")
                 DispatchQueue.main.async {   // from Naked Networking
                     // This is where the line is sent into the attached code
                     if (self.logSendAndReceive) {
@@ -78,7 +76,7 @@ public class TelnetClientConnection {
                 self.logger.trace("setupReceive isComplete")
                 self.connectionDidEnd()
             } else if let error = error {
-                self.logger.trace("setupReceive error \(error, privacy: .public)")
+                self.logger.trace("setupReceive error \(error, privacy:.public)")
                 self.connectionDidFail(error: error)
             } else {
                 self.setupReceive()
@@ -105,7 +103,7 @@ public class TelnetClientConnection {
     }
     
     private func connectionDidFail(error: Error) {
-        logger.error("connection did fail, error: \(error)")
+        logger.error("connection did fail, error: \(error, privacy:.public)")
         self.stop(error: error)
     }
     
