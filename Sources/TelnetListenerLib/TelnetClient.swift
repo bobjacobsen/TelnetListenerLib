@@ -57,7 +57,7 @@ public class TelnetClient {
             start()
         } else {
             // exit(EXIT_FAILURE)
-            logger.error("Connection exited with ERROR: \(error!, privacy: .public)")
+            logger.error("Connection exited with ERROR: \(error!.localizedDescription, privacy: .public)")
         }
     }
 }

@@ -41,7 +41,7 @@ public class TelnetClientConnection {
         logger.trace("TelnetClientConnection stateDidChange entered")
         switch state {
         case .waiting(let error):
-            logger.info("Client connection waiting: \(error, privacy:.public)")
+            logger.info("Client connection waiting: \(error.localizedDescription, privacy:.public)")
             connectionDidFail(error: error) // TODO: is waiting a failure?
         case .ready:
             logger.info("Client connection ready")
@@ -76,7 +76,7 @@ public class TelnetClientConnection {
                 self.logger.trace("setupReceive isComplete")
                 self.connectionDidEnd()
             } else if let error = error {
-                self.logger.trace("setupReceive error \(error, privacy:.public)")
+                self.logger.trace("setupReceive error \(error.localizedDescription, privacy:.public)")
                 self.connectionDidFail(error: error)
             } else {
                 self.setupReceive()
@@ -102,8 +102,8 @@ public class TelnetClientConnection {
         logger.trace("TelnetClientConnection stopped")
     }
     
-    private func connectionDidFail(error: Error) {
-        logger.error("connection did fail, error: \(error, privacy:.public)")
+    private func connectionDidFail(error: NWError) {
+        logger.error("connection did fail, error: \(error.localizedDescription, privacy:.public)")
         self.stop(error: error)
     }
     
@@ -124,4 +124,3 @@ public class TelnetClientConnection {
         logger.trace("TelnetClientConnection stopped(error)")
     }
 }
-
