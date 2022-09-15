@@ -54,7 +54,13 @@ public class TelnetClient {
         if error == nil {
             // exit(EXIT_SUCCESS)
             logger.info("Connection exited with SUCCESS, restarting")
-            start()
+            
+            let deadlineTime = DispatchTime.now() + .milliseconds(1000)
+            DispatchQueue.main.asyncAfter(deadline: deadlineTime) {
+                self.logger.info("   calling start after delay")
+                self.start()
+            }
+
         } else {
             // exit(EXIT_FAILURE)
             logger.error("Connection exited with ERROR: \(error!.localizedDescription, privacy: .public)")
