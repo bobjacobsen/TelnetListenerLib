@@ -168,7 +168,7 @@ final public class TcpConnectionModel : ObservableObject {
             updateStatus(to: "Setup")
             return
         case .waiting(let error):
-            logger.info("entered waiting \(error, privacy:.public)")
+            logger.info("entered waiting \(error.localizedDescription, privacy:.public)")
             ready = false
             updateStatus(to: "Waiting For Connection")
             return
@@ -189,7 +189,7 @@ final public class TcpConnectionModel : ObservableObject {
             }
             return
         case .failed(let error):
-            logger.info("entered waiting \(error, privacy:.public)")
+            logger.info("entered waiting \(error.localizedDescription, privacy:.public)")
             ready = false
             updateStatus(to: "Connection Failed \(error)")
             return
