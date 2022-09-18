@@ -42,7 +42,7 @@ public class TelnetClientConnection {
         switch state {
         case .waiting(let error):
             logger.info("Client connection waiting: \(error.localizedDescription, privacy:.public)")
-            connectionDidFail(error: error) // TODO: is waiting a failure?
+            connectionDidFail(error: error)
         case .ready:
             logger.info("Client connection ready")
         case .failed(let error):
