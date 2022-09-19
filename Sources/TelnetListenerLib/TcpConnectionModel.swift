@@ -265,11 +265,13 @@ public class SamplePeerBrowserDelegate : PeerBrowserDelegate {
     let logger = Logger(subsystem: "us.ardenwood.TelnetListenerLib", category: "SamplePeerBrowserDelegate")
 
     func refreshResults(results: Set<NWBrowser.Result>) {
-        logger.trace("refresh Bonjour results")
-        for item in results {
-            logger.trace("    \(item.endpoint.debugDescription)")
-            let serviceName = item.endpoint.debugDescription.replacingOccurrences(of: "._openlcb-can._tcplocal.", with: "")
-            destinations.append(BrowserFoundEndpoint(result: item, name: serviceName))
+        DispatchQueue.main.async{ // to avoid "publishing changes from within view updates is not allowed"
+            self.logger.trace("refresh Bonjour results")
+            for item in results {
+                self.logger.trace("    \(item.endpoint.debugDescription)")
+                let serviceName = item.endpoint.debugDescription.replacingOccurrences(of: "._openlcb-can._tcplocal.", with: "")
+                self.destinations.append(BrowserFoundEndpoint(result: item, name: serviceName))
+            }
         }
     }
     func displayBrowseError(_ error: NWError) {
