@@ -4,6 +4,7 @@ import Network
 /// Example of creating and starting a connection
 public struct TelnetListenerLib {
 
+    var selectedService  = SamplePeerBrowserDelegate.PeerBrowserDelegateNoHubSelected
     var hostName :   String = "google.com"
     var portNumber : UInt16 = 80
     
@@ -21,7 +22,7 @@ public struct TelnetListenerLib {
     let connection = TcpConnectionModel()
 
     public init() {
-        connection.load(hostName: hostName, portNumber: portNumber, receivedDataCallback: receivedDataCallback,  startUpCallback: startUpCallback)
+        connection.load(serviceName: selectedService, hostName: hostName, portNumber: portNumber, receivedDataCallback: receivedDataCallback,  startUpCallback: startUpCallback)
         
         connection.start()
     }

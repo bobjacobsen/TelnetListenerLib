@@ -10,8 +10,15 @@ import Network
 import os
 
 final public class TcpConnectionModel : ObservableObject {
-    public init() {}
+    public init() {
+        self.browserhandler = SamplePeerBrowserDelegate()
+        self.browser = PeerBrowser(delegate: self.browserhandler) // starts automatically
+    }
     
+    public let browserhandler : SamplePeerBrowserDelegate
+    public let browser : PeerBrowser
+    
+    var serviceName : String = SamplePeerBrowserDelegate.PeerBrowserDelegateNoHubSelected
     var hostName :   String = ""
     var portNumber : UInt16 = 0
     var receivedDataCallback : ((String) -> ())! = nil
@@ -21,6 +28,7 @@ final public class TcpConnectionModel : ObservableObject {
     public private(set) var loaded :        Bool = false
     public private(set) var started :       Bool = false
     public private(set) var ready :         Bool = false
+    public private(set) var mDnsConnection: Bool = false
     
     let logger = Logger(subsystem: "us.ardenwood.TcpConnectionModel", category: "TcpConnectionModel")
 
@@ -36,8 +44,9 @@ final public class TcpConnectionModel : ObservableObject {
     ///   - receivedDataCallback: called with received Strings as they arribve. Do not expect any particular grouping of the characters.
     ///   - startUpCallback - invoked once after the first `start` once the connection is in `ready` state.
 
-    public func load(hostName : String, portNumber : UInt16, receivedDataCallback : ((String) -> ())!,  startUpCallback : (() -> ())!) {
+    public func load(serviceName: String, hostName : String, portNumber : UInt16, receivedDataCallback : ((String) -> ())!,  startUpCallback : (() -> ())!) {
         guard !loaded else { logger.error("Only call load() once"); return}
+        self.serviceName = serviceName
         self.hostName = hostName
         self.portNumber = portNumber
         self.receivedDataCallback = receivedDataCallback
@@ -51,7 +60,8 @@ final public class TcpConnectionModel : ObservableObject {
     
     /// Reset the host name and port number.  This can be used after a `start` operation,
     ///  in which case it should be followed by `stop` and `start`
-    public func retarget(hostName : String, portNumber : UInt16) {
+    public func retarget(serviceName: String, hostName : String, portNumber : UInt16) {
+        self.serviceName = serviceName
         self.hostName = hostName
         self.portNumber = portNumber
         
@@ -64,12 +74,30 @@ final public class TcpConnectionModel : ObservableObject {
     public func start() {
         guard loaded else { logger.error("start() without being loaded"); return}
         guard !started else { logger.warning("start() while connected"); return}
-                
+        
         // open new connection
         started = true
         
-        logger.debug("start")
-        nwConnection = NWConnection(host: self.host, port: self.port, using: .tcp)
+        logger.debug("Starting with \"\(self.serviceName, privacy: .public)\" and \"\(self.hostName, privacy: .public)\"")
+        if (serviceName != SamplePeerBrowserDelegate.PeerBrowserDelegateNoHubSelected) {
+            logger.debug("start service-based connection")
+            mDnsConnection = true
+            // find the service from the name
+            for endpoint in browserhandler.destinations {
+                if (serviceName == endpoint.name) {
+                    logger.trace("   name matched, connecting")
+                    if endpoint.result != nil {
+                        nwConnection = NWConnection(to: endpoint.result!.endpoint, using: .tcp)
+                        break
+                    }
+                }
+                // TODO: Is no-match handling needed here?
+            }
+        } else {
+            logger.debug("start direct TCP connection")
+            mDnsConnection = false
+            nwConnection = NWConnection(host: self.host, port: self.port, using: .tcp)
+        }
         nwConnection.stateUpdateHandler = stateUpdateHandler(to:)
         
         self.nwConnection.start(queue: queue)
@@ -180,7 +208,8 @@ final public class TcpConnectionModel : ObservableObject {
         case .ready:
             logger.info("entered ready")
             ready = true
-            updateStatus(to: "Connected to \(hostName)")
+            let status = mDnsConnection ? serviceName : hostName
+            updateStatus(to: "Connected to \(status)")
 
             // if there's a startUpCallback, invoke it
             if startUpCallback != nil {
@@ -210,5 +239,32 @@ final public class TcpConnectionModel : ObservableObject {
         DispatchQueue.main.async{ // to avoid "publishing changes from within view updates is not allowed"
             self.statusString = to
         }
+    }
+}
+
+// MARK: mDNS/Bonjour code
+
+public struct BrowserFoundEndpoint : Hashable {
+    public init(result: NWBrowser.Result?, name: String) {
+        self.result = result
+        self.name = name
+    }
+    public let result : NWBrowser.Result?
+    public let name : String
+    public let id = UUID()
+}
+
+public class SamplePeerBrowserDelegate : PeerBrowserDelegate {
+    static public let PeerBrowserDelegateNoHubSelected = "<No Hub Selected>"
+    @Published public var destinations : [BrowserFoundEndpoint] = [BrowserFoundEndpoint(result: nil, name: PeerBrowserDelegateNoHubSelected)]
+    func refreshResults(results: Set<NWBrowser.Result>) {
+        print ("refresh results")
+        for item in results {
+            print("    \(item.endpoint)")
+            destinations.append(BrowserFoundEndpoint(result: item, name: item.endpoint.debugDescription))
+        }
+    }
+    func displayBrowseError(_ error: NWError) {
+        print ("browse error: \(error.localizedDescription)")
     }
 }

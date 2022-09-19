@@ -1,3 +1,4 @@
 # TelnetListenerLib
 
-A description of this package.
+Very simple package for TCP connections and mDNS discovery
+
