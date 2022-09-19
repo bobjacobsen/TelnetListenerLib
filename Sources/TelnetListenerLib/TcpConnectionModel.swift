@@ -30,7 +30,7 @@ final public class TcpConnectionModel : ObservableObject {
     public private(set) var ready :         Bool = false
     public private(set) var mDnsConnection: Bool = false
     
-    let logger = Logger(subsystem: "us.ardenwood.TcpConnectionModel", category: "TcpConnectionModel")
+    let logger = Logger(subsystem: "us.ardenwood.TelnetListenerLib", category: "TcpConnectionModel")
 
     let logSendAndReceive = false  // set true for detailed logging
     
@@ -98,12 +98,18 @@ final public class TcpConnectionModel : ObservableObject {
             mDnsConnection = false
             nwConnection = NWConnection(host: self.host, port: self.port, using: .tcp)
         }
-        nwConnection.stateUpdateHandler = stateUpdateHandler(to:)
         
-        self.nwConnection.start(queue: queue)
-        
-        // start receive loop
-        setupReceive()
+        // did the connection creation succeed?
+        if nwConnection != nil {
+            nwConnection.stateUpdateHandler = stateUpdateHandler(to:)
+            self.nwConnection.start(queue: queue)
+            
+            // start receive loop
+            setupReceive()
+        } else {
+            logger.error("nwConnection not created, retry needed")
+            updateStatus(to: "No hub found!")
+        }
     }
 
     /// Stop the connection.  Should be used only once after a `start` operation.
@@ -113,9 +119,8 @@ final public class TcpConnectionModel : ObservableObject {
         guard started else { logger.warning("stop() without being connected"); return}
         
         started = false
-        //self.nwConnection.stateUpdateHandler = nil
         logger.debug("      calling cancel")
-        self.nwConnection.cancel()
+        if (self.nwConnection != nil) { self.nwConnection.cancel() }
     }
     
     /// Send  a String over an open connection
@@ -257,10 +262,12 @@ public struct BrowserFoundEndpoint : Hashable {
 public class SamplePeerBrowserDelegate : PeerBrowserDelegate {
     static public let PeerBrowserDelegateNoHubSelected = "<No Hub Selected>"
     @Published public var destinations : [BrowserFoundEndpoint] = [BrowserFoundEndpoint(result: nil, name: PeerBrowserDelegateNoHubSelected)]
+    let logger = Logger(subsystem: "us.ardenwood.TelnetListenerLib", category: "SamplePeerBrowserDelegate")
+
     func refreshResults(results: Set<NWBrowser.Result>) {
-        print ("refresh results")
+        logger.trace("refresh Bonjour results")
         for item in results {
-            print("    \(item.endpoint)")
+            logger.trace("    \(item.endpoint.debugDescription)")
             let serviceName = item.endpoint.debugDescription.replacingOccurrences(of: "._openlcb-can._tcplocal.", with: "")
             destinations.append(BrowserFoundEndpoint(result: item, name: serviceName))
         }

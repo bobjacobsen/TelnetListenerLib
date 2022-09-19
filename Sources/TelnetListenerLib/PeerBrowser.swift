@@ -7,6 +7,7 @@ Create a class to browse for game peers using Bonjour.
 
 import Foundation
 import Network
+import os
 
 var sharedBrowser: PeerBrowser?
 
@@ -27,6 +28,8 @@ public class PeerBrowser {
 		startBrowsing()
 	}
 
+    let logger = Logger(subsystem: "us.ardenwood.TelnetListenerLib", category: "PeerBrowser")
+
 	// Start browsing for services.
 	func startBrowsing() {
 		// Create parameters, and allow browsing over a peer-to-peer link.
@@ -41,11 +44,11 @@ public class PeerBrowser {
 			case .failed(let error):
 				// Restart the browser if it loses its connection.
 				if error == NWError.dns(DNSServiceErrorType(kDNSServiceErr_DefunctConnection)) {
-					print("Browser failed with \(error), restarting")
+                    self.logger.warning("Browser failed with \(error), restarting")
 					browser.cancel()
 					self.startBrowsing()
 				} else {
-					print("Browser failed with \(error), stopping")
+                    self.logger.warning("Browser failed with \(error), stopping")
 					self.delegate?.displayBrowseError(error)
 					browser.cancel()
 				}
