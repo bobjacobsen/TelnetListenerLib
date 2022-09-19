@@ -1,16 +1,28 @@
 import Network
 
-public struct TelnetListenerLib {
-    let connection: TelnetClientConnection
-    let host: NWEndpoint.Host
-    let port: NWEndpoint.Port
-    public init(host: String, port: UInt16) {
-        // sample init to show compilation
-        
-        self.host = NWEndpoint.Host(host)
-        self.port = NWEndpoint.Port(rawValue: port)!
-        let nwConnection = NWConnection(host: self.host, port: self.port, using: .tcp)
-        connection = TelnetClientConnection(nwConnection: nwConnection)
 
+/// Example of creating and starting a connection
+public struct TelnetListenerLib {
+
+    var hostName :   String = "google.com"
+    var portNumber : UInt16 = 80
+    
+    func receivedDataCallback(data : String) -> () {
+        print ("Data received: \(data)")
+    }
+    
+    func startUpCallback() -> () {
+        print ("Startup complete")
+        
+        // now do a stop
+        connection.stop()
+    }
+
+    let connection = TcpConnectionModel()
+
+    public init() {
+        connection.load(hostName: hostName, portNumber: portNumber, receivedDataCallback: receivedDataCallback,  startUpCallback: startUpCallback)
+        
+        connection.start()
     }
 }
