@@ -261,7 +261,8 @@ public class SamplePeerBrowserDelegate : PeerBrowserDelegate {
         print ("refresh results")
         for item in results {
             print("    \(item.endpoint)")
-            destinations.append(BrowserFoundEndpoint(result: item, name: item.endpoint.debugDescription))
+            let serviceName = item.endpoint.debugDescription.replacingOccurrences(of: "._openlcb-can._tcplocal.", with: "")
+            destinations.append(BrowserFoundEndpoint(result: item, name: serviceName))
         }
     }
     func displayBrowseError(_ error: NWError) {
