@@ -44,11 +44,11 @@ public class PeerBrowser {
 			case .failed(let error):
 				// Restart the browser if it loses its connection.
 				if error == NWError.dns(DNSServiceErrorType(kDNSServiceErr_DefunctConnection)) {
-                    self.logger.warning("Browser failed with \(error), restarting")
+                    self.logger.warning("Browser failed with \(error.debugDescription), restarting")
 					browser.cancel()
 					self.startBrowsing()
 				} else {
-                    self.logger.warning("Browser failed with \(error), stopping")
+                    self.logger.warning("Browser failed with \(error.debugDescription), stopping")
 					self.delegate?.displayBrowseError(error)
 					browser.cancel()
 				}
