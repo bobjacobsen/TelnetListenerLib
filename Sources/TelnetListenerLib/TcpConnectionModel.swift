@@ -13,6 +13,8 @@ final public class TcpConnectionModel : ObservableObject {
     public init() {
         self.browserhandler = SamplePeerBrowserDelegate()
         self.browser = PeerBrowser(delegate: self.browserhandler) // starts automatically
+        
+        browserhandler.parent = self
     }
     
     public let browserhandler : SamplePeerBrowserDelegate
@@ -29,6 +31,8 @@ final public class TcpConnectionModel : ObservableObject {
     public private(set) var started :       Bool = false
     public private(set) var ready :         Bool = false
     public private(set) var mDnsConnection: Bool = false
+    
+    var retryCount = 0
     
     let logger = Logger(subsystem: "us.ardenwood.TelnetListenerLib", category: "TcpConnectionModel")
 
@@ -56,6 +60,7 @@ final public class TcpConnectionModel : ObservableObject {
         self.port = NWEndpoint.Port(rawValue: portNumber)
         
         loaded = true
+        retryCount = 0
     }
     
     /// Reset the host name and port number.  This can be used after a `start` operation,
@@ -68,6 +73,7 @@ final public class TcpConnectionModel : ObservableObject {
         self.host = NWEndpoint.Host(hostName)
         self.port = NWEndpoint.Port(rawValue: portNumber)
 
+        retryCount = 0
     }
     
     /// Open and start up the connection
@@ -91,7 +97,19 @@ final public class TcpConnectionModel : ObservableObject {
                         break
                     }
                 }
-                // TODO: Is no-match handling needed here?
+            }
+            // did this succeed?  Might not if mDNS/Bonjour is delayed coming up
+            if nwConnection == nil && retryCount < 8 {
+                // Connection did not succeed, retry in a half-second
+                retryCount += 1
+                logger.warning("Will reattempt connection shortly")
+                let deadlineTime = DispatchTime.now() + .milliseconds(500)
+                DispatchQueue.main.asyncAfter(deadline: deadlineTime) {
+                    self.logger.info("Reattempting connection")
+                    self.stop()
+                    self.start()
+                }
+
             }
         } else {
             logger.debug("start direct TCP connection")
@@ -259,7 +277,9 @@ public struct BrowserFoundEndpoint : Hashable {
     public let id = UUID()
 }
 
-public class SamplePeerBrowserDelegate : PeerBrowserDelegate {
+public class SamplePeerBrowserDelegate : PeerBrowserDelegate, ObservableObject {
+    var parent : TcpConnectionModel?
+    
     static public let PeerBrowserDelegateNoHubSelected = "<No Hub Selected>"
     @Published public var destinations : [BrowserFoundEndpoint] = [BrowserFoundEndpoint(result: nil, name: PeerBrowserDelegateNoHubSelected)]
     let logger = Logger(subsystem: "us.ardenwood.TelnetListenerLib", category: "SamplePeerBrowserDelegate")
@@ -267,11 +287,14 @@ public class SamplePeerBrowserDelegate : PeerBrowserDelegate {
     func refreshResults(results: Set<NWBrowser.Result>) {
         DispatchQueue.main.async{ // to avoid "publishing changes from within view updates is not allowed"
             self.logger.trace("refresh Bonjour results")
+            self.destinations = [BrowserFoundEndpoint(result: nil, name: SamplePeerBrowserDelegate.PeerBrowserDelegateNoHubSelected)]
             for item in results {
                 self.logger.trace("    \(item.endpoint.debugDescription)")
                 let serviceName = item.endpoint.debugDescription.replacingOccurrences(of: "._openlcb-can._tcplocal.", with: "")
                 self.destinations.append(BrowserFoundEndpoint(result: item, name: serviceName))
             }
+            // notify
+            self.parent!.objectWillChange.send()
         }
     }
     func displayBrowseError(_ error: NWError) {
