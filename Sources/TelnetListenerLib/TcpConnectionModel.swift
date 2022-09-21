@@ -34,7 +34,7 @@ final public class TcpConnectionModel : ObservableObject {
     
     var retryCount = 0
     
-    let logger = Logger(subsystem: "us.ardenwood.TelnetListenerLib", category: "TcpConnectionModel")
+    private let logger = Logger(subsystem: "us.ardenwood.TelnetListenerLib", category: "TcpConnectionModel")
 
     let logSendAndReceive = false  // set true for detailed logging
     
@@ -282,14 +282,14 @@ public class SamplePeerBrowserDelegate : PeerBrowserDelegate, ObservableObject {
     
     static public let PeerBrowserDelegateNoHubSelected = "<No Hub Selected>"
     @Published public var destinations : [BrowserFoundEndpoint] = [BrowserFoundEndpoint(result: nil, name: PeerBrowserDelegateNoHubSelected)]
-    let logger = Logger(subsystem: "us.ardenwood.TelnetListenerLib", category: "SamplePeerBrowserDelegate")
+    private static let logger = Logger(subsystem: "us.ardenwood.TelnetListenerLib", category: "SamplePeerBrowserDelegate")
 
     func refreshResults(results: Set<NWBrowser.Result>) {
         DispatchQueue.main.async{ // to avoid "publishing changes from within view updates is not allowed"
-            self.logger.trace("refresh Bonjour results")
+            SamplePeerBrowserDelegate.logger.trace("refresh Bonjour results")
             self.destinations = [BrowserFoundEndpoint(result: nil, name: SamplePeerBrowserDelegate.PeerBrowserDelegateNoHubSelected)]
             for item in results {
-                self.logger.trace("    \(item.endpoint.debugDescription)")
+                SamplePeerBrowserDelegate.logger.trace("    \(item.endpoint.debugDescription)")
                 let serviceName = item.endpoint.debugDescription.replacingOccurrences(of: "._openlcb-can._tcplocal.", with: "")
                 self.destinations.append(BrowserFoundEndpoint(result: item, name: serviceName))
             }

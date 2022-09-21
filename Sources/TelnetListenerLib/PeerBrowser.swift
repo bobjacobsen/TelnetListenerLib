@@ -28,7 +28,7 @@ public class PeerBrowser {
 		startBrowsing()
 	}
 
-    let logger = Logger(subsystem: "us.ardenwood.TelnetListenerLib", category: "PeerBrowser")
+    private static let logger = Logger(subsystem: "us.ardenwood.TelnetListenerLib", category: "PeerBrowser")
 
 	// Start browsing for services.
 	func startBrowsing() {
@@ -44,11 +44,11 @@ public class PeerBrowser {
 			case .failed(let error):
 				// Restart the browser if it loses its connection.
 				if error == NWError.dns(DNSServiceErrorType(kDNSServiceErr_DefunctConnection)) {
-                    self.logger.warning("Browser failed with \(error.debugDescription), restarting")
+                    PeerBrowser.logger.warning("Browser failed with \(error.debugDescription), restarting")
 					browser.cancel()
 					self.startBrowsing()
 				} else {
-                    self.logger.warning("Browser failed with \(error.debugDescription), stopping")
+                    PeerBrowser.logger.warning("Browser failed with \(error.debugDescription), stopping")
 					self.delegate?.displayBrowseError(error)
 					browser.cancel()
 				}
