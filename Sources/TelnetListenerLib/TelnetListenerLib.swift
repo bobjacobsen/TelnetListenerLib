@@ -4,7 +4,7 @@ import Network
 /// Example of creating and starting a connection
 public struct TelnetListenerLib {
 
-    var selectedService  = SamplePeerBrowserDelegate.PeerBrowserDelegateNoHubSelected
+    var selectedService  = ModelPeerBrowserDelegate.PeerBrowserDelegateNoHubSelected
     var hostName :   String = "google.com"
     var portNumber : UInt16 = 80
     

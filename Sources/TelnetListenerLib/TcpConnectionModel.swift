@@ -11,43 +11,32 @@ import os
 
 final public class TcpConnectionModel : ObservableObject {
     public init() {
-        self.browserhandler = SamplePeerBrowserDelegate()
+        self.browserhandler = ModelPeerBrowserDelegate()
         self.browser = PeerBrowser(delegate: self.browserhandler) // starts automatically
         
         browserhandler.parent = self
     }
     
-    public let browserhandler : SamplePeerBrowserDelegate
-    public let browser : PeerBrowser
-    
-    var serviceName : String = SamplePeerBrowserDelegate.PeerBrowserDelegateNoHubSelected
-    var hostName :   String = ""
-    var portNumber : UInt16 = 0
-    var receivedDataCallback : ((String) -> ())! = nil
-    var startUpCallback : (() -> ())! = nil
-    
+    public let browserhandler : ModelPeerBrowserDelegate  // public access to retrieve values stored while handling browse operations
+        
     // status flags
     public private(set) var loaded :        Bool = false
     public private(set) var started :       Bool = false
     public private(set) var ready :         Bool = false
     public private(set) var mDnsConnection: Bool = false
     
-    var retryCount = 0
-    
-    private let logger = Logger(subsystem: "us.ardenwood.TelnetListenerLib", category: "TcpConnectionModel")
-
-    let logSendAndReceive = false  // set true for detailed logging
+    let logSendAndReceive = false  // set true for really detailed logging
     
     /// Contains the human-readable status of the connection.
     @Published public var statusString : String = "Starting up..."
     
     /// Set up the connection parameters.
     /// - parameters:
+    ///   - serviceName: Name of an mDNS/Bonjour service to find and use.  This takes prioirity over the hostname/port values unless this equals `SamplePeerBrowserDelegate.PeerBrowserDelegateNoHubSelected`
     ///   - hostName: Name or IP address of the desired destination host
     ///   - portnumber: Port number for the connection, between 1 and 64k.
     ///   - receivedDataCallback: called with received Strings as they arribve. Do not expect any particular grouping of the characters.
     ///   - startUpCallback - invoked once after the first `start` once the connection is in `ready` state.
-
     public func load(serviceName: String, hostName : String, portNumber : UInt16, receivedDataCallback : ((String) -> ())!,  startUpCallback : (() -> ())!) {
         guard !loaded else { logger.error("Only call load() once"); return}
         self.serviceName = serviceName
@@ -63,7 +52,7 @@ final public class TcpConnectionModel : ObservableObject {
         retryCount = 0
     }
     
-    /// Reset the host name and port number.  This can be used after a `start` operation,
+    /// Reset the service name, host name and port number.  This can be used after a `start` operation,
     ///  in which case it should be followed by `stop` and `start`
     public func retarget(serviceName: String, hostName : String, portNumber : UInt16) {
         self.serviceName = serviceName
@@ -76,7 +65,7 @@ final public class TcpConnectionModel : ObservableObject {
         retryCount = 0
     }
     
-    /// Open and start up the connection
+    /// Open and start up the connection.
     public func start() {
         guard loaded else { logger.error("start() without being loaded"); return}
         guard !started else { logger.warning("start() while connected"); return}
@@ -85,7 +74,7 @@ final public class TcpConnectionModel : ObservableObject {
         started = true
         
         logger.debug("Starting with \"\(self.serviceName, privacy: .public)\" and \"\(self.hostName, privacy: .public)\"")
-        if (serviceName != SamplePeerBrowserDelegate.PeerBrowserDelegateNoHubSelected) {
+        if (serviceName != ModelPeerBrowserDelegate.PeerBrowserDelegateNoHubSelected) {
             logger.debug("start service-based connection")
             mDnsConnection = true
             // find the service from the name
@@ -167,6 +156,18 @@ final public class TcpConnectionModel : ObservableObject {
     
     // MARK: end of public interface
     
+    internal let browser : PeerBrowser
+
+    internal var serviceName : String = ModelPeerBrowserDelegate.PeerBrowserDelegateNoHubSelected
+    internal var hostName :   String = ""
+    internal var portNumber : UInt16 = 0
+    internal var receivedDataCallback : ((String) -> ())! = nil
+    internal var startUpCallback : (() -> ())! = nil
+
+    var retryCount = 0  // number of service-open tries attempted
+    
+    private let logger = Logger(subsystem: "us.ardenwood.TelnetListenerLib", category: "TcpConnectionModel")
+
     var host : NWEndpoint.Host! = nil
     var port : NWEndpoint.Port! = nil
     var nwConnection: NWConnection! = nil
@@ -277,7 +278,7 @@ public struct BrowserFoundEndpoint : Hashable {
     public let id = UUID()
 }
 
-public class SamplePeerBrowserDelegate : PeerBrowserDelegate, ObservableObject {
+final public class ModelPeerBrowserDelegate : PeerBrowserDelegate, ObservableObject {
     var parent : TcpConnectionModel?
     
     static public let PeerBrowserDelegateNoHubSelected = "<No Hub Selected>"
@@ -286,10 +287,10 @@ public class SamplePeerBrowserDelegate : PeerBrowserDelegate, ObservableObject {
 
     func refreshResults(results: Set<NWBrowser.Result>) {
         DispatchQueue.main.async{ // to avoid "publishing changes from within view updates is not allowed"
-            SamplePeerBrowserDelegate.logger.trace("refresh Bonjour results")
-            self.destinations = [BrowserFoundEndpoint(result: nil, name: SamplePeerBrowserDelegate.PeerBrowserDelegateNoHubSelected)]
+            ModelPeerBrowserDelegate.logger.trace("refresh Bonjour results")
+            self.destinations = [BrowserFoundEndpoint(result: nil, name: ModelPeerBrowserDelegate.PeerBrowserDelegateNoHubSelected)]
             for item in results {
-                SamplePeerBrowserDelegate.logger.trace("    \(item.endpoint.debugDescription)")
+                ModelPeerBrowserDelegate.logger.trace("    \(item.endpoint.debugDescription)")
                 let serviceName = item.endpoint.debugDescription.replacingOccurrences(of: "._openlcb-can._tcplocal.", with: "")
                 self.destinations.append(BrowserFoundEndpoint(result: item, name: serviceName))
             }

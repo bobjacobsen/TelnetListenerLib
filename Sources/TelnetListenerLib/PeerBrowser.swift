@@ -17,6 +17,10 @@ protocol PeerBrowserDelegate: AnyObject {
 	func displayBrowseError(_ error: NWError)
 }
 
+/// The name of the target service. Can be overriddentbefore calling `startBrowsing`.
+public var targetService = "_openlcb-can._tcp"
+
+/// Browse for Bonjour/mDNS peers
 public class PeerBrowser {
 
 	var delegate: PeerBrowserDelegate?
@@ -36,8 +40,8 @@ public class PeerBrowser {
 		let parameters = NWParameters()
 		parameters.includePeerToPeer = true
 
-		// Browse for a custom "_openlcb-can._tcp" service type.
-		let browser = NWBrowser(for: .bonjour(type: "_openlcb-can._tcp", domain: nil), using: parameters)
+		// Browse for the target service type
+		let browser = NWBrowser(for: .bonjour(type: targetService, domain: nil), using: parameters)
 		self.browser = browser
 		browser.stateUpdateHandler = { newState in
 			switch newState {
