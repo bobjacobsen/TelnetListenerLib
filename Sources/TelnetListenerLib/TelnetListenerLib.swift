@@ -9,11 +9,11 @@ public struct TelnetListenerLib {
     var portNumber : UInt16 = 80
     
     func receivedDataCallback(data : String) -> () {
-        print ("Data received: \(data)")
+        // print ("Data received: \(data)")
     }
     
     func startUpCallback() -> () {
-        print ("Startup complete")
+        // print ("Startup complete")
         
         // now do a stop
         connection.stop()

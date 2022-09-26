@@ -285,6 +285,8 @@ final public class ModelPeerBrowserDelegate : PeerBrowserDelegate, ObservableObj
     @Published public var destinations : [BrowserFoundEndpoint] = [BrowserFoundEndpoint(result: nil, name: PeerBrowserDelegateNoHubSelected)]
     private static let logger = Logger(subsystem: "us.ardenwood.TelnetListenerLib", category: "SamplePeerBrowserDelegate")
 
+    private let logger = Logger(subsystem: "us.ardenwood.TelnetListenerLib", category: "ModelPeerBrowserDelegate")
+
     func refreshResults(results: Set<NWBrowser.Result>) {
         DispatchQueue.main.async{ // to avoid "publishing changes from within view updates is not allowed"
             ModelPeerBrowserDelegate.logger.trace("refresh Bonjour results")
@@ -299,6 +301,6 @@ final public class ModelPeerBrowserDelegate : PeerBrowserDelegate, ObservableObj
         }
     }
     func displayBrowseError(_ error: NWError) {
-        print ("browse error: \(error.localizedDescription)")
+        logger.error("browse error: \(error.localizedDescription, privacy: .public)")
     }
 }
