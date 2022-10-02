@@ -38,7 +38,7 @@ final public class TcpConnectionModel : ObservableObject {
     ///   - receivedDataCallback: called with received Strings as they arribve. Do not expect any particular grouping of the characters.
     ///   - startUpCallback - invoked once after the first `start` once the connection is in `ready` state.
     public func load(serviceName: String, hostName : String, portNumber : UInt16, receivedDataCallback : ((String) -> ())!,  startUpCallback : (() -> ())!) {
-        guard !loaded else { logger.error("Only call load() once"); return}
+        guard !loaded else { TcpConnectionModel.logger.error("Only call load() once"); return}
         self.serviceName = serviceName
         self.hostName = hostName
         self.portNumber = portNumber
@@ -67,20 +67,20 @@ final public class TcpConnectionModel : ObservableObject {
     
     /// Open and start up the connection.
     public func start() {
-        guard loaded else { logger.error("start() without being loaded"); return}
-        guard !started else { logger.warning("start() while connected"); return}
+        guard loaded else { TcpConnectionModel.logger.error("start() without being loaded"); return}
+        guard !started else { TcpConnectionModel.logger.warning("start() while connected"); return}
         
         // open new connection
         started = true
         
-        logger.debug("Starting with \"\(self.serviceName, privacy: .public)\" and \"\(self.hostName, privacy: .public)\"")
+        TcpConnectionModel.logger.debug("Starting with \"\(self.serviceName, privacy: .public)\" and \"\(self.hostName, privacy: .public)\"")
         if (serviceName != ModelPeerBrowserDelegate.PeerBrowserDelegateNoHubSelected) {
-            logger.debug("start service-based connection")
+            TcpConnectionModel.logger.debug("start service-based connection")
             mDnsConnection = true
             // find the service from the name
             for endpoint in browserhandler.destinations {
                 if (serviceName == endpoint.name) {
-                    logger.trace("   name matched, connecting")
+                    TcpConnectionModel.logger.trace("   name matched, connecting")
                     if endpoint.result != nil {
                         nwConnection = NWConnection(to: endpoint.result!.endpoint, using: .tcp)
                         break
@@ -91,17 +91,17 @@ final public class TcpConnectionModel : ObservableObject {
             if nwConnection == nil && retryCount < 8 {
                 // Connection did not succeed, retry in a half-second
                 retryCount += 1
-                logger.warning("Will reattempt connection shortly")
+                TcpConnectionModel.logger.warning("Will reattempt connection shortly")
                 let deadlineTime = DispatchTime.now() + .milliseconds(500)
                 DispatchQueue.main.asyncAfter(deadline: deadlineTime) {
-                    self.logger.info("Reattempting connection")
+                    TcpConnectionModel.logger.info("Reattempting connection")
                     self.stop()
                     self.start()
                 }
 
             }
         } else {
-            logger.debug("start direct TCP connection")
+            TcpConnectionModel.logger.debug("start direct TCP connection")
             mDnsConnection = false
             nwConnection = NWConnection(host: self.host, port: self.port, using: .tcp)
         }
@@ -114,33 +114,33 @@ final public class TcpConnectionModel : ObservableObject {
             // start receive loop
             setupReceive()
         } else {
-            logger.error("nwConnection not created, retry needed")
+            TcpConnectionModel.logger.error("nwConnection not created, retry needed")
             updateStatus(to: "No hub found!")
         }
     }
 
     /// Stop the connection.  Should be used only once after a `start` operation.
     public func stop() {
-        logger.info("stop")
-        guard loaded else { logger.error("stop() without being loaded"); return}
-        guard started else { logger.warning("stop() without being connected"); return}
+        TcpConnectionModel.logger.info("stop")
+        guard loaded else { TcpConnectionModel.logger.error("stop() without being loaded"); return}
+        guard started else { TcpConnectionModel.logger.warning("stop() without being connected"); return}
         
         started = false
-        logger.debug("      calling cancel")
+        TcpConnectionModel.logger.debug("      calling cancel")
         if (self.nwConnection != nil) { self.nwConnection.cancel() }
     }
     
     /// Send  a String over an open connection
     public func send(string : String) {
-        guard started else { logger.warning("send() without being connected"); return}
+        guard started else { TcpConnectionModel.logger.warning("send() without being connected"); return}
         let data = string.data(using: .utf8) ?? "<non UTF data>".data(using: .utf8)!
         send(data: data)
     }
     
     /// Send Data over an open connection
     public func send(data : Data) {
-        guard loaded else { logger.error("send() without being loaded"); return}
-        guard started else { logger.warning("send() without being connected"); return}
+        guard loaded else { TcpConnectionModel.logger.error("send() without being loaded"); return}
+        guard started else { TcpConnectionModel.logger.warning("send() without being connected"); return}
 
         nwConnection.send(content: data, completion: .contentProcessed( { error in
             if let error = error {
@@ -148,7 +148,7 @@ final public class TcpConnectionModel : ObservableObject {
                 return
             }
             if (self.logSendAndReceive) {
-                self.logger.trace("connection did send, data: \(String(data: data, encoding: .utf8)!, privacy:.public)")
+                TcpConnectionModel.logger.trace("connection did send, data: \(String(data: data, encoding: .utf8)!, privacy:.public)")
             }
         }))
 
@@ -166,7 +166,7 @@ final public class TcpConnectionModel : ObservableObject {
 
     var retryCount = 0  // number of service-open tries attempted
     
-    private let logger = Logger(subsystem: "us.ardenwood.TelnetListenerLib", category: "TcpConnectionModel")
+    static private let logger = Logger(subsystem: "us.ardenwood.TelnetListenerLib", category: "TcpConnectionModel")
 
     var host : NWEndpoint.Host! = nil
     var port : NWEndpoint.Port! = nil
@@ -176,7 +176,7 @@ final public class TcpConnectionModel : ObservableObject {
 
     // called from send(..) on error
     private func connectionDidFail(error: NWError) {
-        logger.error("connection did fail, error: \(error.localizedDescription, privacy:.public)")
+        TcpConnectionModel.logger.error("connection did fail, error: \(error.localizedDescription, privacy:.public)")
     }
     
     private func setupReceive() {
@@ -191,15 +191,15 @@ final public class TcpConnectionModel : ObservableObject {
                 DispatchQueue.main.async {   // from Naked Networking
                     // This is where the line is sent into the attached code
                     if (self.logSendAndReceive) {
-                        self.logger.trace("connection did receive, data: \(message, privacy:.public)")
+                        TcpConnectionModel.logger.trace("connection did receive, data: \(message, privacy:.public)")
                     }
                     self.receivedDataCallback(message)
                 }
             }
             if isComplete {
-                self.logger.trace("setupReceive isComplete, connection is ending")
+                TcpConnectionModel.logger.trace("setupReceive isComplete, connection is ending")
             } else if let error = error {
-                self.logger.warning("setupReceive error \(error.localizedDescription, privacy:.public)")
+                TcpConnectionModel.logger.warning("setupReceive error \(error.localizedDescription, privacy:.public)")
                 self.connectionDidFail(error: error)
             } else {
                 // OK, repeat this operation
@@ -215,22 +215,22 @@ final public class TcpConnectionModel : ObservableObject {
         
         switch state {
         case .setup:
-            logger.info("entered setup")
+            TcpConnectionModel.logger.info("entered setup")
             ready = false
             updateStatus(to: "Setup")
             return
         case .waiting(let error):
-            logger.info("entered waiting \(error.localizedDescription, privacy:.public)")
+            TcpConnectionModel.logger.info("entered waiting \(error.localizedDescription, privacy:.public)")
             ready = false
             updateStatus(to: "Waiting For Connection")
             return
         case .preparing:
-            logger.info("entered preparing")
+            TcpConnectionModel.logger.info("entered preparing")
             ready = false
             updateStatus(to: "Preparing For Connection")
             return
         case .ready:
-            logger.info("entered ready")
+            TcpConnectionModel.logger.info("entered ready")
             ready = true
             let status = mDnsConnection ? serviceName : hostName
             updateStatus(to: "Connected to \(status)")
@@ -242,17 +242,17 @@ final public class TcpConnectionModel : ObservableObject {
             }
             return
         case .failed(let error):
-            logger.info("entered waiting \(error.localizedDescription, privacy:.public)")
+            TcpConnectionModel.logger.info("entered waiting \(error.localizedDescription, privacy:.public)")
             ready = false
             updateStatus(to: "Connection Failed \(error)")
             return
         case .cancelled:
-            logger.info("entered cancelled")
+            TcpConnectionModel.logger.info("entered cancelled")
             ready = false
             updateStatus(to: "Connection Dropped")
             return
         default:
-            logger.info("entered some other state")
+            TcpConnectionModel.logger.info("entered some other state")
             ready = false
             updateStatus(to: "Unknown State")
             return
@@ -285,8 +285,6 @@ final public class ModelPeerBrowserDelegate : PeerBrowserDelegate, ObservableObj
     @Published public var destinations : [BrowserFoundEndpoint] = [BrowserFoundEndpoint(result: nil, name: PeerBrowserDelegateNoHubSelected)]
     private static let logger = Logger(subsystem: "us.ardenwood.TelnetListenerLib", category: "SamplePeerBrowserDelegate")
 
-    private let logger = Logger(subsystem: "us.ardenwood.TelnetListenerLib", category: "ModelPeerBrowserDelegate")
-
     func refreshResults(results: Set<NWBrowser.Result>) {
         DispatchQueue.main.async{ // to avoid "publishing changes from within view updates is not allowed"
             ModelPeerBrowserDelegate.logger.trace("refresh Bonjour results")
@@ -301,6 +299,6 @@ final public class ModelPeerBrowserDelegate : PeerBrowserDelegate, ObservableObj
         }
     }
     func displayBrowseError(_ error: NWError) {
-        logger.error("browse error: \(error.localizedDescription, privacy: .public)")
+        ModelPeerBrowserDelegate.logger.error("browse error: \(error.localizedDescription, privacy: .public)")
     }
 }
