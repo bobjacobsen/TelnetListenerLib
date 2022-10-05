@@ -11,13 +11,14 @@ import os
 
 var sharedBrowser: PeerBrowser?
 
-// Update the UI when you receive new browser results.
+/// Update the UI when you receive new browser results.
 protocol PeerBrowserDelegate: AnyObject {
 	func refreshResults(results: Set<NWBrowser.Result>)
 	func displayBrowseError(_ error: NWError)
 }
 
-/// The name of the target service. Can be overriddentbefore calling `startBrowsing`.
+/// The name of the target service.
+/// Can be overridden before calling `startBrowsing`.
 public var targetService = "_openlcb-can._tcp"
 
 /// Browse for Bonjour/mDNS peers

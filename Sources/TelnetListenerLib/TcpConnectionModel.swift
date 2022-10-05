@@ -9,6 +9,9 @@ import Foundation
 import Network
 import os
 
+/// Set up and run a TCP connection.
+///
+/// Provides status as a model for e.g. a Settings View.
 final public class TcpConnectionModel : ObservableObject {
     public init() {
         self.browserhandler = ModelPeerBrowserDelegate()
@@ -268,6 +271,7 @@ final public class TcpConnectionModel : ObservableObject {
 
 // MARK: mDNS/Bonjour code
 
+/// Represent an endpoint (host) located by the mDNS/Bonjour browser
 public struct BrowserFoundEndpoint : Hashable {
     public init(result: NWBrowser.Result?, name: String) {
         self.result = result
@@ -278,6 +282,7 @@ public struct BrowserFoundEndpoint : Hashable {
     public let id = UUID()
 }
 
+/// Process results from the mDNS/Bonjour peer browser
 final public class ModelPeerBrowserDelegate : PeerBrowserDelegate, ObservableObject {
     var parent : TcpConnectionModel?
     
