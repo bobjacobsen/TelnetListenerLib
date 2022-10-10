@@ -144,6 +144,7 @@ final public class TcpConnectionModel : ObservableObject {
     public func send(data : Data) {
         guard loaded else { TcpConnectionModel.logger.error("send() without being loaded"); return}
         guard started else { TcpConnectionModel.logger.warning("send() without being connected"); return}
+        guard let nwConnection else { TcpConnectionModel.logger.error("send() without nwConnection valid"); return}
 
         nwConnection.send(content: data, completion: .contentProcessed( { error in
             if let error = error {
