@@ -135,16 +135,16 @@ final public class TcpConnectionModel : ObservableObject {
     
     /// Send  a String over an open connection
     public func send(string : String) {
-        guard started else { TcpConnectionModel.logger.warning("send() without being connected"); return}
+        guard started else { TcpConnectionModel.logger.warning("send(String) without being connected"); return}
         let data = string.data(using: .utf8) ?? "<non UTF data>".data(using: .utf8)!
         send(data: data)
     }
     
     /// Send Data over an open connection
     public func send(data : Data) {
-        guard loaded else { TcpConnectionModel.logger.error("send() without being loaded"); return}
-        guard started else { TcpConnectionModel.logger.warning("send() without being connected"); return}
-        guard let nwConnection else { TcpConnectionModel.logger.error("send() without nwConnection valid"); return}
+        guard loaded else { TcpConnectionModel.logger.error("send(Data) without being loaded"); return}
+        guard started else { TcpConnectionModel.logger.warning("send(Datat) without being connected"); return}
+        guard let nwConnection else { TcpConnectionModel.logger.error("send(Data) without nwConnection valid"); return}
 
         nwConnection.send(content: data, completion: .contentProcessed( { error in
             if let error = error {
