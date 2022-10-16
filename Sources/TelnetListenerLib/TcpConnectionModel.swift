@@ -39,15 +39,17 @@ final public class TcpConnectionModel : ObservableObject {
     ///   - hostName: Name or IP address of the desired destination host
     ///   - portnumber: Port number for the connection, between 1 and 64k.
     ///   - receivedDataCallback: called with received Strings as they arribve. Do not expect any particular grouping of the characters.
-    ///   - startUpCallback - invoked once after the first `start` once the connection is in `ready` state.
-    public func load(serviceName: String, hostName : String, portNumber : UInt16, receivedDataCallback : ((String) -> ())!,  startUpCallback : (() -> ())!) {
+    ///   - startUpCallback: invoked once after the first `start` once the connection is in `ready` state; nil if none
+    ///   - restartCallback: invoked every time the link comes up after the first; nil if none
+    public func load(serviceName: String, hostName : String, portNumber : UInt16, receivedDataCallback : ((String) -> ())!,  startUpCallback : (() -> ())!, restartCallback : (() -> ())!) {
         guard !loaded else { TcpConnectionModel.logger.error("Only call load() once"); return}
         self.serviceName = serviceName
         self.hostName = hostName
         self.portNumber = portNumber
         self.receivedDataCallback = receivedDataCallback
         self.startUpCallback = startUpCallback
-        
+        self.restartCallback = restartCallback
+
         self.host = NWEndpoint.Host(hostName)
         self.port = NWEndpoint.Port(rawValue: portNumber)
         
@@ -167,6 +169,7 @@ final public class TcpConnectionModel : ObservableObject {
     internal var portNumber : UInt16 = 0
     internal var receivedDataCallback : ((String) -> ())! = nil
     internal var startUpCallback : (() -> ())! = nil
+    internal var restartCallback : (() -> ())! = nil
 
     var retryCount = 0  // number of service-open tries attempted
     
@@ -243,6 +246,9 @@ final public class TcpConnectionModel : ObservableObject {
             if startUpCallback != nil {
                 startUpCallback()
                 startUpCallback = nil // only execute the very first time
+            } else {
+                guard let restartCallback else { return }
+                restartCallback()
             }
             return
         case .failed(let error):
