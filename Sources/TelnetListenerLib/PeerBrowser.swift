@@ -19,6 +19,7 @@ protocol PeerBrowserDelegate: AnyObject {
 
 /// The name of the target service.
 /// Can be overridden before calling `startBrowsing`.
+/// This needs to be listed as a Bonjour service in the applications Information Property List
 public var targetService = "_openlcb-can._tcp"
 
 /// Browse for Bonjour/mDNS peers

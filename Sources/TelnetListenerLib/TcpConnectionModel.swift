@@ -11,7 +11,7 @@ import os
 
 /// Set up and run a TCP connection.
 ///
-/// Provides status as a model for e.g. a Settings View.
+/// Publishes status as a model for e.g. a Settings View.
 final public class TcpConnectionModel : ObservableObject {
     public init() {
         self.browserhandler = ModelPeerBrowserDelegate()
@@ -23,17 +23,18 @@ final public class TcpConnectionModel : ObservableObject {
     public let browserhandler : ModelPeerBrowserDelegate  // public access to retrieve values stored while handling browse operations
         
     // status flags
-    public private(set) var loaded :        Bool = false
-    public private(set) var started :       Bool = false
-    public private(set) var ready :         Bool = false
-    public private(set) var mDnsConnection: Bool = false
+    public private(set) var loaded :        Bool = false    // connection parameters loaded via a `load` call
+    public private(set) var started :       Bool = false    // connection process started via a `start` call
+    public private(set) var ready :         Bool = false    // connection ready for use
+    public private(set) var mDnsConnection: Bool = false    // connection made to mDNS service (instead of TCP host name)
     
-    let logSendAndReceive = false  // set true for really detailed logging
+    let logSendAndReceive = false  // compile with true for really detailed logging
     
-    /// Contains the human-readable status of the connection.
+    /// Publish the human-readable status of the connection.
     @Published public var statusString : String = "Starting up..."
     
     /// Set up the connection parameters.
+    /// Call only once, but see `retarget`.
     /// - parameters:
     ///   - serviceName: Name of an mDNS/Bonjour service to find and use.  This takes prioirity over the hostname/port values unless this equals `SamplePeerBrowserDelegate.PeerBrowserDelegateNoHubSelected`
     ///   - hostName: Name or IP address of the desired destination host
@@ -57,8 +58,9 @@ final public class TcpConnectionModel : ObservableObject {
         retryCount = 0
     }
     
-    /// Reset the service name, host name and port number.  This can be used after a `start` operation,
-    ///  in which case it should be followed by `stop` and `start`
+    /// Reset the service name, host name and port number.
+    /// Requires a `load` operation first to set callbacks.
+    /// This can be used after a `start` operation, in which case this should be followed by `stop` and `start`
     public func retarget(serviceName: String, hostName : String, portNumber : UInt16) {
         self.serviceName = serviceName
         self.hostName = hostName
@@ -70,7 +72,7 @@ final public class TcpConnectionModel : ObservableObject {
         retryCount = 0
     }
     
-    /// Open and start up the connection.
+    /// Open and start up the connection. Requires `load` has already been done.
     public func start() {
         guard loaded else { TcpConnectionModel.logger.error("start() without being loaded"); return}
         guard !started else { TcpConnectionModel.logger.warning("start() while connected"); return}
@@ -168,8 +170,8 @@ final public class TcpConnectionModel : ObservableObject {
     internal var hostName :   String = ""
     internal var portNumber : UInt16 = 0
     internal var receivedDataCallback : ((String) -> ())! = nil
-    internal var startUpCallback : (() -> ())! = nil
-    internal var restartCallback : (() -> ())! = nil
+    internal var startUpCallback : (() -> ())! = nil            // invoked on first start only
+    internal var restartCallback : (() -> ())! = nil            // invoked on 2nd and later starts
 
     var retryCount = 0  // number of service-open tries attempted
     
@@ -217,6 +219,7 @@ final public class TcpConnectionModel : ObservableObject {
 
     var lastSeenState : NWConnection.State! = nil
     
+    // decode state into human readable status and react.
     private func stateUpdateHandler(to state: NWConnection.State) {
         lastSeenState = state
         
@@ -247,6 +250,7 @@ final public class TcpConnectionModel : ObservableObject {
                 startUpCallback()
                 startUpCallback = nil // only execute the very first time
             } else {
+                // else if there's a restartCallback, invoke that
                 guard let restartCallback else { return }
                 restartCallback()
             }
@@ -269,6 +273,7 @@ final public class TcpConnectionModel : ObservableObject {
         }
     }
 
+    // Update the contents of the published status string
     private func updateStatus(to : String) {
         DispatchQueue.main.async{ // to avoid "publishing changes from within view updates is not allowed"
             self.statusString = to
@@ -294,6 +299,8 @@ final public class ModelPeerBrowserDelegate : PeerBrowserDelegate, ObservableObj
     var parent : TcpConnectionModel?
     
     static public let PeerBrowserDelegateNoHubSelected = "<No Hub Selected>"
+    
+    // Publish the list of identified service endpoints
     @Published public var destinations : [BrowserFoundEndpoint] = [BrowserFoundEndpoint(result: nil, name: PeerBrowserDelegateNoHubSelected)]
     private static let logger = Logger(subsystem: "us.ardenwood.TelnetListenerLib", category: "SamplePeerBrowserDelegate")
 

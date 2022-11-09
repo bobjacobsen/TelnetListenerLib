@@ -1,7 +1,7 @@
 import Network
 
 
-/// Example of creating and starting a connection
+/// Example of creating and starting a connection - this is sample code
 public struct TelnetListenerLib {
 
     var selectedService  = ModelPeerBrowserDelegate.PeerBrowserDelegateNoHubSelected
@@ -18,7 +18,7 @@ public struct TelnetListenerLib {
     func startUpCallback() -> () {
         // print ("Startup complete")
         
-        // now do a stop
+        // now do a stop (just to show how that's done, normally you start receiving data here)
         connection.stop()
     }
 
