@@ -2,7 +2,7 @@
 Based on Apple sample code: https://developer.apple.com/documentation/network/building_a_custom_peer-to-peer_protocol
 
 Abstract:
-Create a class to browse for game peers using Bonjour.
+Create a class to browse for peers using Bonjour.
 */
 
 import Foundation
@@ -18,8 +18,10 @@ protocol PeerBrowserDelegate: AnyObject {
 }
 
 /// The name of the target service.
+///
 /// Can be overridden before calling `startBrowsing`.
-/// This needs to be listed as a Bonjour service in the applications Information Property List
+///
+/// This needs to be listed as a Bonjour service in the application's Information Property List
 public var targetService = "_openlcb-can._tcp"
 
 /// Browse for Bonjour/mDNS peers
