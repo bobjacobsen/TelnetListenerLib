@@ -137,6 +137,11 @@ final public class TcpConnectionModel : ObservableObject {
         if (self.nwConnection != nil) { self.nwConnection.cancel() }
     }
     
+    /// Rescan for hubs
+    public func rescan() {
+        self.browser.startBrowsing()
+    }
+    
     /// Send  a String over an open connection
     public func send(string : String) {
         guard started else { TcpConnectionModel.logger.warning("send(String) without being connected"); return}
